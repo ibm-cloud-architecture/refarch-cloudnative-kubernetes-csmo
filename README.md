@@ -1,68 +1,79 @@
-# Kubernetes Helm
+# CSMO for Kubernates based Cloud Native Reference Application
 
-[![CircleCI](https://circleci.com/gh/kubernetes/helm.svg?style=svg)](https://circleci.com/gh/kubernetes/helm)
-[![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/helm)](https://goreportcard.com/report/github.com/kubernetes/helm)
+*This project is part of the 'IBM Cloud Native Reference Architecture' suite, available at
+https://github.com/ibm-cloud-architecture/refarch-cloudnative*
 
-Helm is a tool for managing Kubernetes charts. Charts are packages of
-pre-configured Kubernetes resources.
-
-Use Helm to...
-
-- Find and use [popular software packaged as Kubernetes charts](https://github.com/kubernetes/charts)
-- Share your own applications as Kubernetes charts
-- Create reproducible builds of your Kubernetes applications
-- Intelligently manage your Kubernetes manifest files
-- Manage releases of Helm packages
-
-## Helm in a Handbasket
-
-Helm is a tool that streamlines installing and managing Kubernetes applications.
-Think of it like apt/yum/homebrew for Kubernetes.
-
-- Helm has two parts: a client (`helm`) and a server (`tiller`)
-- Tiller runs inside of your Kubernetes cluster, and manages releases (installations)
-  of your charts.
-- Helm runs on your laptop, CI/CD, or wherever you want it to run.
-- Charts are Helm packages that contain at least two things:
-  - A description of the package (`Chart.yaml`)
-  - One or more templates, which contain Kubernetes manifest files
-- Charts can be stored on disk, or fetched from remote chart repositories
-  (like Debian or RedHat packages)
-
-## Install
-
-Binary downloads of the Helm client can be found at the following links:
-
-- [OSX](https://kubernetes-helm.storage.googleapis.com/helm-v2.3.0-darwin-amd64.tar.gz)
-- [Linux](https://kubernetes-helm.storage.googleapis.com/helm-v2.3.0-linux-amd64.tar.gz)
-- [Linux 32-bit](https://kubernetes-helm.storage.googleapis.com/helm-v2.3.0-linux-386.tar.gz)
-
-Unpack the `helm` binary and add it to your PATH and you are good to go!
-macOS/[homebrew](https://brew.sh/) users can also use `brew install kubernetes-helm`.
-
-To rapidly get Helm up and running, start with the [Quick Start Guide](docs/quickstart.md).
-
-See the [installation guide](docs/install.md) for more options,
-including installing pre-releases.
+## Table of Contents
+- **[Introduction](#introduction)**
 
 
-## Docs
+## Introduction
+DevOps, specifically Cloud Service Management & Operations (CSMO), is important for Cloud Native Microservice style applications. This project is developed to demonstrate how to use tools and services available on IBM Bluemix to implement CSMO for the BlueCompute reference application.
 
-Get started with the [Quick Start guide](docs/quickstart.md) or plunge into the [complete documentation](docs/index.md)
+The full CSMO documentation is found at **[[TBD]]** 
 
-## Roadmap
+This project deploys a self contained and independent monitoring stack into the Kubernetes Cluster. [**Helm**](https://github.com/kubernetes/helm) is Kubernetes's package manager, which facilitates deployment of prepackaged Kubernetes resources that are reusable. With the aid of Helm, the monitoring component **Prometheus** and the display component **Grafana** are deployed.
 
-The [Helm roadmap is currently located on the wiki](https://github.com/kubernetes/helm/wiki/Roadmap).
+Let's get started.
 
-## Community, discussion, contribution, and support
+## Architecture & CSMO toolchain
+Here is the High Level DevOps Architecture Diagram for the CSMO setup on Kubernetes.
 
-You can reach the Helm community and developers via the following channels:
+![DevOps Toolchain](static/imgs/architecture.png?raw=true)  
 
-- [Kubernetes Slack](https://slack.k8s.io): #helm
-- Mailing List: https://groups.google.com/forum/#!forum/kubernetes-sig-apps
-- Developer Call: Thursdays at 9:30-10:00 Pacific. https://engineyard.zoom.us/j/366425549
+This guide will install the following resources:
+* 3 x 20GB [Bluemix Kubernetes Persistent Volume Claim](https://console.ng.bluemix.net/docs/containers/cs_apps.html#cs_apps_volume_claim) to store Promethus and Grafana configuration and historical data.
+* 1 x Grafana pod
+* 3 x Prometheus pods
+* 1 x Prometheus service for above Prometheus pods with only internal cluster IPs exposed.
+* 1 x Grafana service for above Grafana pod with port 3000 exposed to an external LoadBalancer.
+* All using Kubernetes Resources.
 
-### Code of conduct
+## Pre-Requisites
+1. **CLIs for Bluemix, Kubernetes, Helm, JQ, and YAML:** Run the following script to install the CLIs:
 
-Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
-# refarch-cloudnative-kubernetes-csmo
+    `$ ./install_cli.sh`
+
+2. **Bluemix Account.**
+    * Login to your Bluemix account or register for a new account [here](https://bluemix.net/registration).
+    * Once you have logged in, create a new space for hosting the application in US-Southregions.
+3. **Paid Kubernetes Cluster:** If you don't already have a paid Kubernetes Cluster in Bluemix, please go to the following links and follow the steps to create one.
+    * [Log into the Bluemix Container Service](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes#step-2-provision-a-kubernetes-cluster-on-ibm-bluemix-container-service).
+    * [Create a paid Kubernetes Cluster](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes#paid-cluster).
+
+## Install Prometheus & Grafana on Kubernetes
+### Step 1: Install Prometheus on Kubernetes Cluster
+As mentioned in the [**Introduction Section**](#introduction), we will be using a Prometheus Helm Chart to deploy Prometheus into a Bluemix Kubernetes Cluster. Before you do so, make sure that you installed all the required CLIs as indicated in the [**Pre-Requisites**](#pre-requisites).
+
+Here is a script that installs the Prometheus Chart for you:
+
+    ```
+    $ cd prometheus
+    $ ./install_prometheus.sh <cluster-name> <Optional:bluemix-space-name> <Optional:bluemix-api-key>
+    ```
+
+The output of the above script will provide instructions on how to access the newly installed Grafana service, including the public IP address and a way to retreive the admin password.
+
+**Note** that Prometheus and Grafana take a few minutes to initialize even after showing installation success
+
+The `install_prometheus.sh` script does the following:
+* **Log into Bluemix.**
+* **Set Terminal Context to Kubernetes Cluster.**
+* **Initialize Helm Client and Server (Tiller).**
+* **Create Persistent Volume Claim,** which is where all Prometheus and Grafana related data is stored.
+* **Install Prometheus Chart on Kubernetes Cluster using Helm.**
+* **Install Grafana Chart on Kubernetes Cluster using Helm.**
+* **Configure a Datasource in Grafana to access Prometheus.**
+
+### Step 2: Import Prometheus specific dashboards to Grafana
+This is a quick and easy way to see information in Grafana quickly and easily. Note that you may only run the following script after Grafana has finished initializing, so check that you can login before running the script (there is no problem with running the script multiple times).
+
+Here is the script that installs the Prometheus dashboards for you:
+
+    ```
+    $ cd prometheus
+    $ ./import_dashboards.sh <grafana_ip> <admin_password>
+    ```
+
+
+That's it! You now have a fully working version of Prometheus and Grafana on your Kubernetes Deployment
