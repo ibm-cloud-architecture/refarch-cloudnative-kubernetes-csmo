@@ -1,6 +1,6 @@
 @echo off
 SETLOCAL ENABLEDELAYEDEXPANSION ENABLEEXTENSIONS 
-set PATH=%PATH%;%CD%;%CD%\win_utils
+set PATH=%PATH%;%CD%;%CD%\..\refarch-cloudnative-kubernetes\win_utils
 
 
 set URL=%1
