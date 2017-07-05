@@ -5,6 +5,9 @@ https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes*
 
 ## Table of Contents
 - **[Introduction](#introduction)**
+- **[Architecture & CSMO toolchain]**
+- **[Pre-Requisites]**
+- **[Install Prometheus & Grafana on Kubernetes]**
 
 
 ## Introduction
@@ -28,8 +31,10 @@ This guide will install the following resources on a lite/free cluster:
 
 ## Pre-Requisites
 1. **CLIs for Bluemix, Kubernetes, Helm, JQ, and YAML:** Run the following script to install the CLIs:
-
-    `$ ./install_cli.sh`
+    * Windows:
+        `install_cli.bat`
+    * Linux/Mac:
+        `$ ./install_cli.sh`
 
 2. **Bluemix Account.**
     * Login to your Bluemix account or register for a new account [here](https://bluemix.net/registration).
@@ -41,14 +46,14 @@ This guide will install the following resources on a lite/free cluster:
 As mentioned in the [**Introduction Section**](#introduction), we will be using a Prometheus Helm Chart to deploy Prometheus into a Bluemix Kubernetes Cluster. Before you do so, make sure that you installed all the required CLIs as indicated in the [**Pre-Requisites**](#pre-requisites).
 
 Here is the script that installs the charts for you:
-    On Windows :  
-    ```
+On Windows :  
+   
     install_csmo.bat <cluster-name> <bluemix-space-name> <bluemix-api-key> <region id> 
-    ```
-    On Linkux/Mac:
-    ```
+    
+On Linux/Mac:
+   
     ./install_csmo.sh <cluster-name> <bluemix-space-name> <bluemix-api-key> <region id>
-    ```
+    
     
 Upon completion you will be presented with the Grafana URL and admin password
 
@@ -70,13 +75,11 @@ Here is the script that installs the Prometheus dashboards for you:
 
 On Windows :  
 
-    ```
     import_dashboards.bat <grafana_url> <grafana_password>
-    ```
+   
 On Linkux/Mac:
 
-    ```
     ./import_dashboards.sh <grafana_url> <grafana_password>
-    ```
+    
 
 That's it! You now have a fully working version of Prometheus and Grafana on your Kubernetes Deployment
