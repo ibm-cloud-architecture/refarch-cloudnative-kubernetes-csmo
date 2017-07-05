@@ -1,7 +1,7 @@
 # CSMO for Kubernates based Cloud Native Reference Application
 
-*This project is part of the 'IBM Cloud Native Reference Architecture' suite, available at
-https://github.com/ibm-cloud-architecture/refarch-cloudnative*
+*This project is part of the 'IBM Cloud Native Reference Architecture for Kubernetes' suite, available at
+https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes*
 
 ## Table of Contents
 - **[Introduction](#introduction)**
@@ -19,14 +19,11 @@ Let's get started.
 ## Architecture & CSMO toolchain
 Here is the High Level DevOps Architecture Diagram for the CSMO setup on Kubernetes.
 
-![DevOps Toolchain](static/imgs/architecture.png?raw=true)  
-
-This guide will install the following resources:
-* 3 x 20GB [Bluemix Kubernetes Persistent Volume Claim](https://console.ng.bluemix.net/docs/containers/cs_apps.html#cs_apps_volume_claim) to store Promethus and Grafana configuration and historical data.
+This guide will install the following resources on a lite/free cluster:
 * 1 x Grafana pod
 * 3 x Prometheus pods
 * 1 x Prometheus service for above Prometheus pods with only internal cluster IPs exposed.
-* 1 x Grafana service for above Grafana pod with port 3000 exposed to an external LoadBalancer.
+* 1 x Grafana service for above Grafana pod with a port exposed to the external internet.
 * All using Kubernetes Resources.
 
 ## Pre-Requisites
@@ -36,44 +33,50 @@ This guide will install the following resources:
 
 2. **Bluemix Account.**
     * Login to your Bluemix account or register for a new account [here](https://bluemix.net/registration).
-    * Once you have logged in, create a new space for hosting the application in US-Southregions.
-3. **Paid Kubernetes Cluster:** If you don't already have a paid Kubernetes Cluster in Bluemix, please go to the following links and follow the steps to create one.
-    * [Log into the Bluemix Container Service](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes#step-2-provision-a-kubernetes-cluster-on-ibm-bluemix-container-service).
-    * [Create a paid Kubernetes Cluster](https://github.com/ibm-cloud-architecture/refarch-cloudnative-kubernetes#paid-cluster).
-
+    * Once you have logged in, create a new space for hosting the application.
+3. **Lite Kubernetes Cluster:** If you don't already have a paid Kubernetes Cluster in Bluemix, please go to the following links and follow the steps to create one.
+    
 ## Install Prometheus & Grafana on Kubernetes
-### Step 1: Install Prometheus on Kubernetes Cluster
+### Step 1: Install Prometheus & Grafana on Kubernetes Cluster
 As mentioned in the [**Introduction Section**](#introduction), we will be using a Prometheus Helm Chart to deploy Prometheus into a Bluemix Kubernetes Cluster. Before you do so, make sure that you installed all the required CLIs as indicated in the [**Pre-Requisites**](#pre-requisites).
 
-Here is a script that installs the Prometheus Chart for you:
-
+Here is the script that installs the charts for you:
+    On Windows :  
     ```
-    $ cd prometheus
-    $ ./install_prometheus.sh <cluster-name> <Optional:bluemix-space-name> <Optional:bluemix-api-key>
+    install_csmo.bat <cluster-name> <bluemix-space-name> <bluemix-api-key> <region id> 
     ```
+    On Linkux/Mac:
+    ```
+    ./install_csmo.sh <cluster-name> <bluemix-space-name> <bluemix-api-key> <region id>
+    ```
+    
+Upon completion you will be presented with the Grafana URL and admin password
 
-The output of the above script will provide instructions on how to access the newly installed Grafana service, including the public IP address and a way to retreive the admin password.
+**Note** that Prometheus and Grafana may take a few minutes to initialize even after showing installation success
 
-**Note** that Prometheus and Grafana take a few minutes to initialize even after showing installation success
-
-The `install_prometheus.sh` script does the following:
+The `install_csmo.sh` script does the following:
 * **Log into Bluemix.**
 * **Set Terminal Context to Kubernetes Cluster.**
 * **Initialize Helm Client and Server (Tiller).**
-* **Create Persistent Volume Claim,** which is where all Prometheus and Grafana related data is stored.
 * **Install Prometheus Chart on Kubernetes Cluster using Helm.**
 * **Install Grafana Chart on Kubernetes Cluster using Helm.**
 * **Configure a Datasource in Grafana to access Prometheus.**
+* **Retreives password and IP:PORT information to access Grafana.**
 
-### Step 2: Import Prometheus specific dashboards to Grafana
+### Step 2: Import Prometheus-specific dashboards to Grafana
 This is a quick and easy way to see information in Grafana quickly and easily. Note that you may only run the following script after Grafana has finished initializing, so check that you can login before running the script (there is no problem with running the script multiple times).
 
 Here is the script that installs the Prometheus dashboards for you:
 
-    ```
-    $ cd prometheus
-    $ ./import_dashboards.sh <grafana_ip> <admin_password>
-    ```
+On Windows :  
 
+    ```
+    import_dashboards.bat <grafana_url> <grafana_password>
+    ```
+On Linkux/Mac:
+
+    ```
+    ./import_dashboards.sh <grafana_url> <grafana_password>
+    ```
 
 That's it! You now have a fully working version of Prometheus and Grafana on your Kubernetes Deployment
