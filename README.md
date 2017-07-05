@@ -46,6 +46,7 @@ This guide will install the following resources on a lite/free cluster:
 As mentioned in the [**Introduction Section**](#introduction), we will be using a Prometheus Helm Chart to deploy Prometheus into a Bluemix Kubernetes Cluster. Before you do so, make sure that you installed all the required CLIs as indicated in the [**Pre-Requisites**](#pre-requisites).
 
 Here is the script that installs the charts for you:
+
 On Windows :  
    
     install_csmo.bat <cluster-name> <bluemix-space-name> <bluemix-api-key> <region id> 
@@ -77,7 +78,7 @@ On Windows :
 
     import_dashboards.bat <grafana_url> <grafana_password>
    
-On Linkux/Mac:
+On Linux/Mac:
 
     ./import_dashboards.sh <grafana_url> <grafana_password>
     
