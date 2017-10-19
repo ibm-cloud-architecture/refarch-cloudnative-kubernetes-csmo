@@ -67,7 +67,11 @@ The `install_csmo.sh` script does the following:
 * **Install Prometheus Chart on Kubernetes Cluster using Helm.**
 * **Install Grafana Chart on Kubernetes Cluster using Helm.**
 * **Configure a Datasource in Grafana to access Prometheus.**
-* **Retreives password and IP:PORT information to access Grafana.**
+* **Retrieves password and IP:PORT information to access Grafana.**
+
+Note that due do API changes, the script will retrieve the private IP and not the public one. To find the public IP, execute the following command:
+   
+    bx cs workers <clustername>
 
 ### Step 2: Import Prometheus-specific dashboards to Grafana
 This is a quick and easy way to see information in Grafana quickly and easily. Note that you may only run the following script after Grafana has finished initializing, so check that you can login before running the script (there is no problem with running the script multiple times).
