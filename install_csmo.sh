@@ -104,7 +104,8 @@ function install_prometheus {
 		printf "\n\n${grn}Installing prometheus chart. This will take a few minutes...${end} ${coffee3}\n\n"
 		new_release="${NAMESPACE}-prometheus"
 
-		time helm install --namespace ${NAMESPACE} stable/prometheus --name ${new_release} --set image.pullPolicy=Always --set server.persistentVolume.enabled=false --set alertmanager.persistentVolume.enabled=false --timeout 600
+		#time helm install --namespace ${NAMESPACE} stable/prometheus --name ${new_release} --set image.pullPolicy=Always --set server.persistentVolume.enabled=false --set alertmanager.persistentVolume.enabled=false --timeout 600
+		time helm install --namespace ${NAMESPACE} prometheus-3.0.3.tgz --name ${new_release} --set image.pullPolicy=Always --set server.persistentVolume.enabled=false --set alertmanager.persistentVolume.enabled=false --timeout 600
 
 		local status=$?
 
