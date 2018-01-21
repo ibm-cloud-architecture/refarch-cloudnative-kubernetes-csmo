@@ -87,7 +87,7 @@ if %errorlevel% EQU 0 (
    echo prometheus is already installed. skipping...
    goto Grafana
 )
-helm install --namespace %NAMESPACE% stable/prometheus --name %NAMESPACE%-prometheus --set server.persistentVolume.enabled=false --set alertmanager.persistentVolume.enabled=false --set image.pullPolicy=Always --timeout 600 >> BC_install.log 2>&1
+helm install --namespace %NAMESPACE% prometheus-3.0.3.tgz --name %NAMESPACE%-prometheus --set server.persistentVolume.enabled=false --set alertmanager.persistentVolume.enabled=false --set image.pullPolicy=Always --timeout 600 >> BC_install.log 2>&1
 if %errorlevel% NEQ 0 (
    echo Could not install prometheus. Exiting.
    exit /b 1
