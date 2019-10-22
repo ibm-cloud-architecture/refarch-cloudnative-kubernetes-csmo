@@ -1,14 +1,14 @@
 @echo off
-SETLOCAL ENABLEDELAYEDEXPANSION ENABLEEXTENSIONS 
+SETLOCAL ENABLEDELAYEDEXPANSION ENABLEEXTENSIONS
 set PATH=%PATH%;%CD%;%CD%\win_utils;%CD%\..\refarch-cloudnative-kubernetes\win_utils
 
 set CLUSTER_NAME=%1
-set BX_SPACE=%~2
-set BX_API_KEY=%3
-set BX_REGION=%4
-set NAMESPACE=%5
+set BX_API_KEY=%2
+set BX_REGION=%3
+set NAMESPACE=%4
+set BX_RESOURCE_GROUP=%5
 set INSTALL_MON=%6
-set BX_API_ENDPOINT="api.ng.bluemix.net"
+set BX_API_ENDPOINT="cloud.ibm.com"
 
 :GetKey
 set alfanum=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
@@ -22,21 +22,16 @@ for /F %%c in ('echo %%alfanum:~!rnd_num!^,1%%') do set HS_256_KEY=!HS_256_KEY!%
 rem echo HS_256_KEY=%HS_256_KEY%
 rem @echo on
 
-if  "%BX_REGION%" == "" (
-   set BX_API_ENDPOINT=api.ng.bluemix.net
-   echo Using default endpoint !BX_API_ENDPOINT!
-) else (
-   set BX_API_ENDPOINT=api.!BX_REGION!.bluemix.net
-   echo Using endpoint !BX_API_ENDPOINT!
-)
+set BX_API_ENDPOINT=cloud.ibm.com
+echo Using default endpoint !BX_API_ENDPOINT!
 
 if "%CLUSTER_NAME%" == "" (
    echo Please provide Cluster Name. Exiting...
    exit /b 1
 )
 
-if "%BX_SPACE%" == "" (
-   echo Please provide Bluemix Space Name. Exiting...
+if "%BX_RESOURCE_GROUP%" == "" (
+   set BX_RESOURCE_GROUP="default"
    exit /b 1
 )
 if "%BX_API_KEY%" == "" (
@@ -50,19 +45,19 @@ if "%NAMESPACE%" == "" (
 
 echo Login into Bluemix
 set BLUEMIX_API_KEY=%BX_API_KEY%
-bx login -a %BX_API_ENDPOINT% -s "%BX_SPACE%"
+ibmcloud login -a %BX_API_ENDPOINT% -r %BX_REGION% -g %BX_RESOURCE_GROUP%
 if %errorlevel% NEQ 0 (
    echo Could not login to Bluemix
    exit /b 1
 )
 echo Login into Container Service
-bx cs init
+ibmcloud cr login
 
 set KUBECONFIG=""
 echo Setting terminal context to %CLUSTER_NAME%...
 for /f "tokens=2 delims==" %%i in ('bx cs cluster-config %CLUSTER_NAME%') do @set KUBECONFIG=%%i
 if %errorlevel% EQU 0 (
-   echo KUBECONFIG is set to %KUBECONFIG% 
+   echo KUBECONFIG is set to %KUBECONFIG%
 ) else (
    echo KUBECONFIG was not properly set. Exiting.
    exit /b 1
@@ -94,7 +89,7 @@ if %errorlevel% NEQ 0 (
 )
 echo prometheus was successfully installed!
 echo Cleaning up...
-kubectl --namespace %NAMESPACE% delete jobs -l release=%NAMESPACE%-prometheus --cascade >> BC_install.log 2>&1 
+kubectl --namespace %NAMESPACE% delete jobs -l release=%NAMESPACE%-prometheus --cascade >> BC_install.log 2>&1
 
 :Grafana
 echo Installing grafana chart. This will take a few minutes...
@@ -128,18 +123,18 @@ echo Getting the WebPorts for the apps.
     if "%GRWEBPORT%" == "null" (
        timeout /t 1
        goto :grwebport_loop_start
-    )   
+    )
     if "%GRWEBPORT%" == "" (
        timeout /t 1
        goto :grwebport_loop_start
-    )   
+    )
     goto grwebport_loop_exit
 goto :grwebport_loop_start
 :grwebport_loop_exit
 
 :grafana_password
 kubectl get secret --namespace %NAMESPACE% %NAMESPACE%-grafana-grafana -o jsonpath="{.data.grafana-admin-password}" > %TMP%\GR_Passwrd.tmp
-certutil -f -decode %TMP%\GR_Passwrd.tmp %TMP%\GR_Passwrd.out 
+certutil -f -decode %TMP%\GR_Passwrd.tmp %TMP%\GR_Passwrd.out
 for /f %%i in (%TMP%\GR_Passwrd.out) do @set GRPASS=%%i >> BC_install.log 2>&1
 del %TMP%\GR_Passwrd.tmp
 del %TMP%\GR_Passwrd.out
