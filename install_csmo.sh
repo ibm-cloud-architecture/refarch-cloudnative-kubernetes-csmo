@@ -11,20 +11,14 @@ coffee=$'\xE2\x98\x95'
 coffee3="${coffee} ${coffee} ${coffee}"
 
 CLUSTER_NAME=$1
-BX_SPACE=$2
-BX_API_KEY=$3
-BX_REGION=$4
-NAMESPACE=$5
+BX_API_KEY=$2
+BX_REGION=$3
+NAMESPACE=$4
+BX_RESOURCE_GROUP=$5
 BX_API_ENDPOINT=""
 
-if [[ -z "${BX_REGION// }" ]]; then
-	BX_API_ENDPOINT="api.ng.bluemix.net"
-	echo "Using DEFAULT endpoint ${grn}${BX_API_ENDPOINT}${end}."
-
-else
-	BX_API_ENDPOINT="api.${BX_REGION}.bluemix.net"
-	echo "Using endpoint ${grn}${BX_API_ENDPOINT}${end}."
-fi
+BX_API_ENDPOINT="cloud.ibm.com"
+echo "Using endpoint ${grn}${BX_API_ENDPOINT}${end}."
 
 if [[ -z "${NAMESPACE// }" ]]; then
 	NAMESPACE="default"
@@ -36,7 +30,7 @@ function check_tiller {
 
 function print_usage {
 	printf "\n\n${yel}Usage:${end}\n"
-	printf "\t${cyn}./install_bluecompute_ce.sh <cluster-name> <bluemix-space-name> <bluemix-api-key>${end}\n\n"
+	printf "\t${cyn}./install_csmo.sh <cluster-name> <ibmcloud-api-key> <ibmcloud-region> <namespace> <resource-group>${end}\n\n"
 }
 function bluemix_login {
 	# Bluemix Login
@@ -45,9 +39,9 @@ function bluemix_login {
 		echo "${red}Please provide Cluster Name. Exiting..${end}"
 		exit 1
 
-	elif [[ -z "${BX_SPACE// }" ]]; then
+	elif [[ -z "${BX_RESOURCE_GROUP// }" ]]; then
 		print_usage
-		echo "${red}Please provide Bluemix Space. Exiting..${end}"
+		BX_RESOURCE_GROUP="default"
 		exit 1
 
 	elif [[ -z "${BX_API_KEY// }" ]]; then
@@ -59,7 +53,7 @@ function bluemix_login {
 	printf "${grn}Login into Bluemix${end}\n"
 
 	export BLUEMIX_API_KEY=${BX_API_KEY}
-	bx login -a ${BX_API_ENDPOINT} -s "${BX_SPACE}"
+	ibmcloud login -a ${BX_API_ENDPOINT} -r ${BX_REGION} -g ${BX_RESOURCE_GROUP}
 
 	status=$?
 
@@ -71,12 +65,12 @@ function bluemix_login {
 
 function set_cluster_context {
 	printf "\n\n${grn}Login into Container Service${end}\n\n"
-	bx cs init
+	ibmcloud cr login
 
 	# Getting Cluster Configuration
 	unset KUBECONFIG
 	printf "\n${grn}Setting terminal context to \"${CLUSTER_NAME}\"...${end}\n"
-	eval "$(bx cs cluster-config ${CLUSTER_NAME} | tail -1)"
+	eval "$(ibmcloud cs cluster-config ${CLUSTER_NAME} | tail -2)"
 	echo "KUBECONFIG is set to = $KUBECONFIG"
 
 	if [[ -z "${KUBECONFIG// }" ]]; then
@@ -146,7 +140,7 @@ function install_grafana {
 }
 
 function get_web_port {
-	kubectl --namespace ${NAMESPACE} get service ${NAMESPACE}-grafana-grafana -o json | jq .spec.ports[0].nodePort
+	kubectl --namespace ${NAMESPACE} get service ${NAMESPACE}-grafana-grafana -o jsonpath='{.spec.ports[0].nodePort}'
 }
 
 function create_kube_namespace {

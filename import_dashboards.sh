@@ -15,7 +15,7 @@ PASSWORD=$2
 
 function print_usage {
         printf "\n\n${yel}Usage:${end}\n"
-        printf "\t${cyn}./install_bluecompute_ce.sh <grafana-url> <grafana-admin-password>${end}\n\n"
+        printf "\t${cyn}./import_dashboards.sh <grafana-url> <grafana-admin-password>${end}\n\n"
 }
 
 
